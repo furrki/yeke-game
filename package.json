@@ -1,0 +1,18 @@
+{
+  "name": "chat",
+  "version": "0.0.1",
+  "private": true,
+  "author": "furrki",
+  
+  "dependencies": {
+    "express": "*",
+    "path": "^0.12.7",
+    "socket.io": "*"
+  },
+  "scripts": {
+  	"start": "node app.js"
+  }
+  "engines": {
+  	"node": "4.2.x"
+  }
+}

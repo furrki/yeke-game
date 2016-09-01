@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+        <link href="/stylesheets/style.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class='container'>
+
+            <div class="panel panel-primary" id='setPanel'>
+              <div class="panel-heading">Get Your Nickname</div>
+              <div class="panel-body">
+                  <form class="form-inline" id="nickForm">
+                    <div class="form-group">
+                      <input type="text" class="form-control" id="nick" placeholder="Enter Nick Here...">
+                    </div>
+                    <button type="submit" class="btn btn-default">Set Nick</button>
+                  </form>
+              </div>
+            </div>
+
+
+            <table class="table" id='chatPanel'>
+                <tbody>
+                  <tr>
+                    <td class='col-lg-7'>
+                        <div class="panel panel-default" id='msgPanel'>
+                          <div class="panel-body">
+                              <ul class="list-group" id='messages'>
+
+                              </ul>
+                          </div>
+                        </div>
+                        <div class='panel panel-default' id='messageBox'>
+                            <form class="form" id='sendMessageForm'>
+                              <div class="form-group">
+                                <input type="text" class="form-control" id="sendMessage" placeholder="Enter Your Message Here..">
+                              </div>
+                            </form>
+                        </div>
+                    </td>
+                    <td class='col-lg-3'>
+                        <div class="panel panel-default" id='userPanel'>
+                            <div class="panel-heading" >
+                                Users in Room
+                            </div>
+                            <div class="panel-body">
+                              <ul class="list-group" id="userList">
+
+                              </ul>
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+
+
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/javascripts/jquery.js"></script>
+        <script src="/javascripts/bootstrap.min.js"></script>
+
+        <script>
+            $(function(){
+                socket = io.connect()
+                messages = []
+                $nickForm = $('#nickForm')
+                $sendMessageForm = $('#sendMessageForm')
+                $messages = $('#messages')
+                $userList = $('#userList')
+                $('#nick').focus()
+
+                $nickForm.submit(function(e){
+                    e.preventDefault()
+                    socket.emit('setNick', $('#nick').val(), function(data){
+                        if(data){
+                            $('#setPanel').hide()
+                            $('#chatPanel').show()
+                            $nickForm[0].reset()
+                            $('#sendMessage').focus()
+                        } else {
+                            alert('Nick Already Taken!')
+                        }
+
+                    })
+                })
+                $sendMessageForm.submit(function(e){
+                    e.preventDefault()
+                    socket.emit('sendMsg',{
+                        msg: $('#sendMessage').val()
+                    })
+                    $sendMessageForm[0].reset()
+
+                })
+
+                socket.on('updateUsers', function(data){
+                    $userList.html('');
+                    for(var i in data.nicks){
+                        $userList.append('<li class="list-group-item">'+data.nicks[i]+'</li>')
+                    }
+                })
+
+                socket.on('getMsg', function(data){
+
+                    $messages.append('<li class="list-group-item"><b>'+data.nick+':</b> '+data.msg+'</li>')
+                    if($('#messages li').size() >= 10){
+                        $('#messages li').get(0).remove()
+                    }
+                })
+
+            })
+        </script>
+    </body>
+</html>
