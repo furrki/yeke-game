@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "author": "furrki",
-  
+  "license": "ISC",
+  "description": "chat app",
   "dependencies": {
     "express": "*",
     "path": "^0.12.7",
@@ -11,8 +12,8 @@
   },
   "scripts": {
   	"start": "node app.js"
-  }
+  },
   "engines": {
-  	"node": "4.2.x"
+  	"node": "4.2.1"
   }
 }
