@@ -3,11 +3,12 @@
     <head>
         <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
         <link href="/stylesheets/style.css" rel="stylesheet">
+        <title>Pisti of furrki || Multiplayer</title>
     </head>
     <body>
         <div class='container'>
 
-            <div class="panel panel-primary" id='setPanel'>
+            <div class="panel panel-primary" id='setPanel'  >
               <div class="panel-heading">Get Your Nickname</div>
               <div class="panel-body">
                   <form class="form-inline" id="nickForm">
@@ -19,43 +20,86 @@
               </div>
             </div>
 
+            <div class="panel panel-primary" id='roomsPanel'>
+              <div class="panel-heading">
+                Rooms
+              </div>
+              <div class="panel-body">
+                   <button class="btn btn-small btn-default" id="createNewGame">New Game</button>
+                   <br>
+                   <table class="table table-striped" id="roomsTable">
+                       <tbody>
 
-            <table class="table" id='chatPanel'>
-                <tbody>
-                  <tr>
-                    <td class='col-lg-7'>
-                        <div class="panel panel-default" id='msgPanel'>
-                          <div class="panel-body">
-                              <ul class="list-group" id='messages'>
+                        </tbody>
+                   </table>
+              </div>
+            </div>
 
-                              </ul>
-                          </div>
-                        </div>
-                        <div class='panel panel-default' id='messageBox'>
-                            <form class="form" id='sendMessageForm'>
-                              <div class="form-group">
-                                <input type="text" autocomplete='off' class="form-control" id="sendMessage" placeholder="Enter Your Message Here..">
-                              </div>
-                            </form>
-                        </div>
-                    </td>
-                    <td class='col-lg-3'>
-                        <div class="panel panel-default" id='userPanel'>
-                            <div class="panel-heading" >
-                                Users in Room
-                            </div>
-                            <div class="panel-body">
-                              <ul class="list-group" id="userList">
+            <div class="panel panel-primary" id="gamePanel">
+              <div class="panel-heading">
+                  <table class='fullwidth'>
+                      <tr>
+                          <td id='myNick'></td>
+                          <td id='foeNick' class='right' ></td>
+                      </tr>
+                  </table>
+              </div>
+              <div class="panel-body">
+                  <table class="table" id="gameTable">
+                    <tbody>
+                        <tr id='foeHand'>
+                            <td class='kart'>
+                                <img src="images/cards/4-2.png"  id="bir1">
+                            </td>
+                            <td class='kart'>
+                                <img src="images/cards/4-2.png"  id="bir2">
+                            </td>
+                            <td class='kart'>
+                                <img src="images/cards/4-2.png"  id="bir3">
+                            </td>
+                            <td class='kart'>
+                                <img src="images/cards/4-2.png"  id="bir4">
+                            </td>
+                            <td  class='skor'>
+                                <p id="birSkor">12</p>
+                            </td>
+                        </tr>
 
-                              </ul>
-                          </div>
-                        </div>
-                    </td>
-                  </tr>
-                </tbody>
-            </table>
+                        <tr>
+                            <td ></td>
+                            <td class="skor ortaSkor"><p id="ortSum">12</p></td>
+                            <td>
+                                <div class="ortakart">
+                                    <img src="images/cards/4-2.png"  id="orta">
+                                </div>
+
+                            </td>
+                        </tr>
+
+                        <tr id='myHand'>
+                            <td class='kart'>
+                                <img src="images/cards/4-2.png"  id="iki1" class='myCard'>
+                            </td>
+                            <td class='kart'>
+                                <img src="images/cards/4-2.png"  id="iki2" class='myCard'>
+                            </td>
+                            <td class='kart'>
+                                <img src="images/cards/4-2.png"  id="iki3" class='myCard'>
+                            </td>
+                            <td class='kart'>
+                                <img src="images/cards/4-2.png"  id="iki4" class='myCard'>
+                            </td>
+                            <td  class='skor'>
+                                <p id="ikiSkor">12</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                  </table>
+              </div>
+            </div>
 
         </div>
+
 
 
 
@@ -67,50 +111,162 @@
         <script>
             $(function(){
                 socket = io.connect()
+                usernames = []
                 messages = []
+                nick = ""
+                foeNick = ""
                 $nickForm = $('#nickForm')
                 $sendMessageForm = $('#sendMessageForm')
-                $messages = $('#messages')
-                $userList = $('#userList')
+                $roomsTable = $('#roomsTable tbody')
+
                 $('#nick').focus()
+
+
+                // Settings up
 
                 $nickForm.submit(function(e){
                     e.preventDefault()
                     socket.emit('setNick', $('#nick').val(), function(data){
                         if(data){
                             $('#setPanel').hide()
-                            $('#chatPanel').show()
+                            $('#roomsPanel').show()
+                            nick = $('#nick').val()
+
                             $nickForm[0].reset()
-                            $('#sendMessage').focus()
                         } else {
                             alert('Nick Already Taken!')
                         }
 
                     })
                 })
-                $sendMessageForm.submit(function(e){
-                    e.preventDefault()
-                    socket.emit('sendMsg',{
-                        msg: $('#sendMessage').val()
-                    })
-                    $sendMessageForm[0].reset()
 
+                $('#createNewGame').click(function(e){
+                    socket.emit('createGame',true,function(data){
+                        if(data){
+                            refreshGamePanel()
+                            $('#roomsPanel').hide()
+                            $('#gamePanel').show()
+                            $('#myNick').text(nick)
+                        } else {
+                            alert('A Problem Ossured!')
+                        }
+
+                    })
+                })
+
+                window.joinRoom = function(id){
+                    socket.emit('joinGame',{
+                        gameid: id
+                    },function(data){
+                        if(data){
+                            $('#roomsPanel').hide()
+                            $('#gamePanel').show()
+                            $('#myNick').text(nick)
+                            $('#foeNick').text(foeNick)
+                        } else {
+                            alert('A Problem Ossured!')
+                        }
+
+                    })
+                }
+
+
+                socket.on('setTurn',function(data){
+                    if(data.turn == 'you'){
+                        $('#myHand').animate({
+                            opacity: 0.9
+                        },500)
+                        $('#foeHand').animate({
+                            opacity: 0.6
+                        },500)
+                    }
+                    if(data.turn == 'foe'){
+                        $('#myHand').animate({
+                            opacity: 0.6
+                        },500)
+                        $('#foeHand').animate({
+                            opacity: 0.9
+                        },500)
+                    }
+                })
+
+                socket.on('setFoe',function(data){
+                    foeNick = data.nick
+                    if(data.type == 'set'){
+                        $('#myNick').text(nick)
+                        $('#foeNick').text(foeNick)
+                    }
+                })
+
+                socket.on('alertWinner',function(data){
+                    alert(data.winner + ' Won!')
+                })
+
+                socket.on('getOutOfRoom', function(data){
+                    if(data.type == "left")
+                        alert('Your rival left the room!')
+                    refreshGamePanel()
+                    $('#gamePanel').hide()
+                    $('#roomsPanel').show()
+                })
+
+                // Game functions
+
+                socket.on('refreshCards',function(data){
+                    //console.log(data)
+                    for(i = 1; i <= 4; i++){
+                        $('#bir'+i).attr('src','/images/cards/'+data.foeHand[i-1]+'.png')
+                        $('#iki'+i).attr('src','/images/cards/'+data.hand[i-1]+'.png')
+                    }
+                })
+
+                socket.on('refreshOrt',function(data){
+                    $('#orta').attr('src','images/cards/'+data.ort+'.png')
+                    $('#ortSum').text(data.ortSum)
+                })
+
+                $('.myCard').click(function(e){
+                    id = this.id
+                    socket.emit('kartAt', {
+                        id: id,
+                    })
+                })
+
+                function refreshGamePanel(){
+                    for(i = 1; i < 5; i++){
+                        $('#bir'+i).attr('src','/images/cards/4-2.png')
+                        $('#iki'+i).attr('src','/images/cards/4-2.png')
+                    }
+                    foeNick = ''
+                    $('foeNick').text('')
+                    $('#orta').attr('src','/images/cards/4-2.png')
+                    $('#ortSum').text('0')
+                    $('#birSkor').text('0')
+                    $('#ikiSkor').text('0')
+                }
+
+
+                // Updaters
+
+                socket.on('updateScores', function(data){
+                    $('#birSkor').text(data.foeScore)
+                    $('#ikiSkor').text(data.myScore)
                 })
 
                 socket.on('updateUsers', function(data){
-                    $userList.html('');
-                    for(var i in data.nicks){
-                        $userList.append('<li class="list-group-item">'+data.nicks[i]+'</li>')
-                    }
+                    usernames = data.nicks
                 })
 
-                socket.on('getMsg', function(data){
+                socket.on('updateRooms', function(data){
 
-                    $messages.append('<li class="list-group-item"><b>'+data.nick+':</b> '+data.msg+'</li>')
-                    if($('#messages li').size() >= 10){
-                        $('#messages li').get(0).remove()
+                    $roomsTable.html('');
+                    for(var room in data.rooms){
+                        $roomsTable.append('<tr><td>'+data.rooms[room].nick+'</td><td><button class=" btn btn-success " name="joinRoomButton" onclick=joinRoom("'+data.rooms[room].id+'")>Katıl</button></td><td>Boş</td></tr>')
                     }
+
                 })
+
+
 
             })
         </script>

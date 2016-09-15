@@ -1,39 +1,92 @@
 body{
     background: url(/images/background.jpg);
     background-size: cover;
+    font-family: "Comic Sans MS", cursive, sans-serif;
 }
 
 #setPanel{
-    margin-top: 10%;
-
+    margin: auto;
+    margin-top: 60px;
+    width: 500px;
+    text-align:center;
 }
 
-#chatPanel{
-    margin-top: 15%;
-    height: 500px;
-    background: rgba(220,220,220,0.8);
+#roomsPanel{
+    display:none;
+    height: 600px;
+    width: 800px;
+    margin:auto;
+    margin-top:60px;
+}
+
+#gamePanel{
+    display:none;
+    margin:auto;
+    margin-top:60px;
+    width: 800px;
+    height: 650px;
+    background: url(/images/table.jpg);
+    background-size: 100% 100%;
+
     border-radius: 6px;
-    display: none;
 
 }
 
-#msgPanel{
-    overflow: hidden;
-    height:80%;
-}
-#userPanel{
-	overflow: auto;
-	height:90%;
-}
-#chatBox{
-    width: 80%;
+#gameTable td{
+    padding:25px;
 }
 
-#messageBox{
-    padding:12px;
+#roomsTable{
+    text-align: center;
 }
 
+#myHand, #foeHand{
+    background: rgba(0,0,0,0.7);
 
+}
 .table th, .table td {
      border-top: none !important;
  }
+.fullwidth{
+    width:100%;
+}
+.kart{
+    text-align: center;
+}
+.kart img{
+    width:100px;
+    height: 140px;
+}
+.skor{
+    color: #000;
+    font-weight: bold;
+    height:100%;
+    text-align: center;
+}
+.skor p{
+    margin-top:60px;
+    border-radius: 6px;
+    background: #FFFF00;
+    padding:5px;
+    width:40px;
+}
+.ortakart{
+    text-align: left;
+
+}
+.ortakart img{
+    width:100px;
+    height: 140px;
+}
+.ortaSkor{
+    float:right;
+}
+.fullwidth{
+    width:100%;
+}
+.right{
+    float:right;
+}
+#myNick, #foeNick, .panel-heading{
+    font-weight:bold;
+}
