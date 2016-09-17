@@ -263,6 +263,8 @@ var game = function(){
                 return false
     }
     this.refreshOrt = function(){
+        if(!(self.p1.socket && self.p2.socket)) return false
+
         self.p1.socket.emit('refreshOrt', {
           ort: self.ort,
           ortSum: self.ortSum
