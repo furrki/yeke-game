@@ -18,7 +18,6 @@ app.get('/', function(req, res){
 function htmlEntities(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-
 function shuffle(array) {
         var currentIndex = array.length, temporaryValue, randomIndex ;
 
@@ -78,7 +77,8 @@ function hideCards(cards){
     return newCards
 }
 
-var deste = function(){
+var deste = function()
+{
         this.cards = [];
         for(var i = 0; i <= 3; i++)
         {
@@ -105,8 +105,8 @@ var game = function(){
     this.nick1 = null
     this.nick2 = null
     this.deste = newDeste.cards
-    this.ort= "4-2"
-    this.ortSum = 0
+    this.last = "4-2"
+
     this.turn = 0
     this.lastTaker = 0
     this.isSettedUp = false
@@ -137,155 +137,116 @@ var game = function(){
         self.refreshScores()
 
     }
+    this.getRakip = function(kim){
 
+        if(!self.isSettedUp) return false
+
+        if(kim == self.p1.id){
+            return self.p2
+        } else {
+            return self.p1
+        }
+    }
     this.setGame = function()
     {
         self.p1 = {
             id: self.p1.id,
-            hand: [ false, false, false, false ],
             score: 0,
             socket: self.p1
         }
         self.p2 = {
             id: self.p2.id,
-            hand: [ false, false, false, false ],
             score: 0,
             socket: self.p2
 
         }
-        for(i = 0; i <= 3; i++){
-            self.yereKartKoy(self.deste.pop())
-        }
 
-        self.turn = self.p1.id
-        self.p1.socket.emit('setTurn', { turn: 'you' })
-        self.p2.socket.emit('setTurn', { turn: 'foe' })
-        self.isSettedUp = true
-
-        self.kartDagit()
-
-    }
-
-    this.yereKartKoy = function(kart)
-    {
-        self.ort = kart
-        self.ortSum++
-
-        self.refreshOrt()
-    }
-
-    this.kartDagit = function(){
-        if(self.deste.length < 8) return false
-
-        for(i = 0; i < 4; i++)
-            self.p1.hand[i] = (self.deste.pop())
-        for(i = 0; i < 4; i++)
-            self.p2.hand[i] = (self.deste.pop())
-
-        self.refreshHands()
-
-    }
-    this.hamleYap = function(kim, kart){
-        if(self.turn != kim) return false
-        selectedCard = self.getPlayer(kim).hand[kart]
-        if(!selectedCard) return false
-
-        prevOrt = self.ort
-
-        //Yerden Kart Alma Mekanizması
-        if(self.ort && (self.getPlayer(kim).hand[kart].split("-")[1] == self.ort.split("-")[1] || self.getPlayer(kim).hand[kart].split("-")[1] == 10) && self.ortSum != 0)
-        {
-                self.getPlayer(kim).score +=
-                    self.ortSum
-                    + ((self.ortSum == 1 && self.getPlayer(kim).hand[kart].split("-")[1] != 10) || (self.getPlayer(kim).hand[kart].split("-")[1] == 10 && self.ort.split("-")[1] == 10) ? 9 : 1)
-                    + (((self.getPlayer(kim).hand[kart].split("-")[1] == 10 || self.getPlayer(kim).hand[kart].split("-")[1] == 0 ) && (self.ortSum == 1) && (self.getPlayer(kim).hand[kart].split("-")[1] == self.ort.split("-")[1])) ? 10 : 0)
-
-                self.lastTaker = kim
-                self.ort = undefined
-                self.ortSum = 0
-                self.refreshScores()
-        } else {
-            self.yereKartKoy(self.getPlayer(kim).hand[kart])
-        }
-
-        self.getPlayer(kim).hand[kart] = false
-        self.refreshHands()
-        self.refreshOrt()
-
-
-        if(kim == self.p1.id){
-            self.turn = self.p2.id
-            self.p2.socket.emit('setTurn', { turn: 'you' })
-            self.p1.socket.emit('setTurn', { turn: 'foe' })
-        } else {
+        if(Math.random() > 0.5)
             self.turn = self.p1.id
-            self.p1.socket.emit('setTurn', { turn: 'you' })
-            self.p2.socket.emit('setTurn', { turn: 'foe' })
+        else {
+            self.turn = self.p2.id
         }
-        if(self.controller()){
-            self.kartDagit()
 
+        self.isSettedUp = true
+        self.refreshOrt()
+        self.refreshScores()
+        self.refreshTurn()
+
+
+    }
+
+    this.hamleYap = function(kim, kart){
+        if(self.turn != kim || self.deste[kart].indexOf("-") == -1) return false
+        self.last = self.deste[kart]
+        chosen = self.deste[kart].split("-")[0]
+        self.deste.splice(kart, 1);
+
+        if(chosen == 0){
+            if(kim == self.p1.id){
+                self.turn = self.p2.id
+            } else {
+                self.turn = self.p1.id
+            }
+            self.refreshTurn()
+
+        } else {
+            if(kim == self.p1.id)
+                self.p1.score++
+            else
+                self.p2.score++
+
+        }
+
+
+
+        if(self.controller()){
+            self.refreshOrt()
+            self.refreshScores()
         }
     }
 
     this.controller = function(){
-            r = 0;
-            for(var i = 0; i < 4; i++)
-            {
-                if(self.p1.hand[i]) r=1;
-                if(self.p2.hand[i]) r=1;
+        if (self.deste.length == 0) {
+            if(self.p1.score > self.p2.score){
+                self.p1.socket.emit('alertWinner', {winner:self.p1.socket.nick})
+                self.p2.socket.emit('alertWinner', {winner:self.p1.socket.nick})
+            } else if(self.p2.score > self.p1.score){
+                self.p1.socket.emit('alertWinner', {winner:self.p2.socket.nick})
+                self.p2.socket.emit('alertWinner', {winner:self.p2.socket.nick})
+            } else {
+                self.p1.socket.emit('alertWinner', {winner: "All Players"})
+                self.p2.socket.emit('alertWinner', {winner: "All Players"})
             }
-
-            if(self.deste.length == 0 && r == 0)
-            {
-                if(self.lastTaker == self.p1.id)
-                    self.p1.score += self.ortSum;
-                else
-                    self.p2.score += self.ortSum;
-                self.refreshScores()
-
-                if(self.p1.score > self.p2.score){
-                    self.p1.socket.emit('alertWinner', {winner:self.p1.socket.nick})
-                    self.p2.socket.emit('alertWinner', {winner:self.p1.socket.nick})
-                } else if(self.p2.score > self.p1.score){
-                    self.p1.socket.emit('alertWinner', {winner:self.p2.socket.nick})
-                    self.p2.socket.emit('alertWinner', {winner:self.p2.socket.nick})
-                } else {
-                    self.p1.socket.emit('alertWinner', {winner: "All Players"})
-                    self.p2.socket.emit('alertWinner', {winner: "All Players"})
-                }
-                self.playerExit()
-                return false
-            }
-            if(r == 0)
-                return true;
-            else
-                return false
+            self.playerExit()
+            return false
+        }
+        return true
     }
-    this.refreshOrt = function(){
-        if(!(self.p1.socket && self.p2.socket)) return false
 
+    this.refreshOrt = function(){
         self.p1.socket.emit('refreshOrt', {
-          ort: self.ort,
-          ortSum: self.ortSum
+          ort: hideCards(self.deste),
+          last: self.last
         })
 
         self.p2.socket.emit('refreshOrt', {
-          ort: self.ort,
-          ortSum: self.ortSum
+          ort: hideCards(self.deste),
+          last: self.last
         })
-    }
-    this.refreshHands = function(){
-        self.p1.socket.emit('refreshCards', {
-          hand: (self.p1.hand),
-          foeHand: hideCards(self.p2.hand)
-        })
+        self.refreshTurn()
 
-        self.p2.socket.emit('refreshCards', {
-          hand: (self.p2.hand),
-          foeHand: hideCards(self.p1.hand)
-        })
     }
+
+    this.refreshTurn = function(){
+        if(self.turn == self.p1.id){
+            self.p1.socket.emit('setTurn',{turn:"you"})
+            self.p2.socket.emit('setTurn',{turn:"foe"})
+        } else {
+            self.p1.socket.emit('setTurn',{turn:"foe"})
+            self.p2.socket.emit('setTurn',{turn:"you"})
+        }
+    }
+
     this.refreshScores = function(){
         self.p1.socket.emit('updateScores',{
             myScore: self.p1.score,
@@ -296,6 +257,17 @@ var game = function(){
             foeScore: self.p1.score
         })
     }
+    this.sendSmiley = function(kim, name){
+        if(name == "yumruk")
+            self.getRakip(kim).socket.emit('getSmiley',{img:"yumruk.png"})
+        else if(name == "kalp")
+            self.getRakip(kim).socket.emit('getSmiley',{img:"kalp.png"})
+        else if(name == "opucuk")
+            self.getRakip(kim).socket.emit('getSmiley',{img:"opucuk.png"})
+
+    }
+
+
     // Query for selecting playerd
     this.getPlayer = function(id){
         if(id == self.p1.id)
@@ -357,7 +329,8 @@ var Clients = function(){
         usernames.splice(usernames.indexOf(socket.nick), 1)
     }
 
-    this.getSocket = function(id){
+    this.getSocket = function(id)
+    {
         for(socket in SOCKET_LIST)
         {
             if(SOCKET_LIST[socket.id] == id)
@@ -421,16 +394,22 @@ io.sockets.on('connection',function(socket){
       }
     })
 
-    socket.on('kartAt',function(data, callback){
+    socket.on('hamleYap',function(data, callback){
         if(socket.game && socket.game.isSettedUp)
         {
             if(socket.game.turn == socket.id){
-                if(data.id.length != 4) return false
-                card = data.id.slice(-1)
-                socket.game.hamleYap(socket.id, card-1)
+                card = data.chosen
+                socket.game.hamleYap(socket.id, card)
             }
         }
 
+    })
+
+    socket.on('sendSmiley',function(data,callback){
+        if(socket.game && socket.game.isSettedUp)
+        {
+                socket.game.sendSmiley(socket.id, data.type)
+        }
     })
 
     socket.on('disconnect',function(data){

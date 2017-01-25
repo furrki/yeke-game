@@ -3,9 +3,10 @@
     <head>
         <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
         <link href="/stylesheets/style.css" rel="stylesheet">
-        <title>Pisti of furrki || Multiplayer</title>
+        <title>Yeke of furrki || Multiplayer</title>
     </head>
     <body>
+        <div id="moves"></div>
         <div class='container'>
 
             <div class="panel panel-primary" id='setPanel'  >
@@ -17,6 +18,10 @@
                     </div>
                     <button type="submit" class="btn btn-default">Set Nick</button>
                   </form>
+
+                  <button class="btn btn-primary" onclick="window.location='/auth/facebook'">Facebook</button>
+                  <button class="btn btn-danger" onclick="window.location='/logout'">Logout</button>
+
               </div>
             </div>
 
@@ -45,54 +50,34 @@
                   </table>
               </div>
               <div class="panel-body">
+                  <button id="vur">Vur</button>
+                  <button id="kalp">Kalp</button>
+                  <button id="opucuk">Öpücük</button>
+                  <table class="table orta" id="gameTable">
+                      <tbody>
+                          <tr>
+                              <td class='skor'>
+                                  <p id="birSkor">12</p>
+                              </td>
+                              <td class="myArea"></td>
+                              <td class="myArea"></td>
+                              <td class="myArea"></td>
+                              <td class="kart" id="last">
+                                  <img src="/images/cards/4-2.png">
+                              </td>
+                              <td class="foeArea"></td>
+                              <td class="foeArea"></td>
+                              <td class="foeArea"></td>
+                              <td  class='skor right'>
+                                  <p id="ikiSkor">12</p>
+                              </td>
+                          </tr>
+                      </tbody>
+                  </table>
                   <table class="table" id="gameTable">
-                    <tbody>
-                        <tr id='foeHand'>
-                            <td class='kart'>
-                                <img src="images/cards/4-2.png"  id="bir1">
-                            </td>
-                            <td class='kart'>
-                                <img src="images/cards/4-2.png"  id="bir2">
-                            </td>
-                            <td class='kart'>
-                                <img src="images/cards/4-2.png"  id="bir3">
-                            </td>
-                            <td class='kart'>
-                                <img src="images/cards/4-2.png"  id="bir4">
-                            </td>
-                            <td  class='skor'>
-                                <p id="birSkor">12</p>
-                            </td>
-                        </tr>
 
-                        <tr>
-                            <td ></td>
-                            <td class="skor ortaSkor"><p id="ortSum">12</p></td>
-                            <td>
-                                <div class="ortakart">
-                                    <img src="images/cards/4-2.png"  id="orta">
-                                </div>
+                    <tbody id="ort">
 
-                            </td>
-                        </tr>
-
-                        <tr id='myHand'>
-                            <td class='kart'>
-                                <img src="images/cards/4-2.png"  id="iki1" class='myCard'>
-                            </td>
-                            <td class='kart'>
-                                <img src="images/cards/4-2.png"  id="iki2" class='myCard'>
-                            </td>
-                            <td class='kart'>
-                                <img src="images/cards/4-2.png"  id="iki3" class='myCard'>
-                            </td>
-                            <td class='kart'>
-                                <img src="images/cards/4-2.png"  id="iki4" class='myCard'>
-                            </td>
-                            <td  class='skor'>
-                                <p id="ikiSkor">12</p>
-                            </td>
-                        </tr>
                     </tbody>
                   </table>
               </div>
@@ -113,12 +98,11 @@
                 socket = io.connect()
                 usernames = []
                 messages = []
+                $nickForm = $('#nickForm')
                 nick = ""
                 foeNick = ""
-                $nickForm = $('#nickForm')
-                $sendMessageForm = $('#sendMessageForm')
                 $roomsTable = $('#roomsTable tbody')
-
+                ort = []
                 $('#nick').focus()
 
 
@@ -148,7 +132,7 @@
                             $('#gamePanel').show()
                             $('#myNick').text(nick)
                         } else {
-                            alert('A Problem Ossured!')
+                            alert('A Problem Occured!')
                         }
 
                     })
@@ -164,7 +148,7 @@
                             $('#myNick').text(nick)
                             $('#foeNick').text(foeNick)
                         } else {
-                            alert('A Problem Ossured!')
+                            alert('A Problem Occured!')
                         }
 
                     })
@@ -173,19 +157,19 @@
 
                 socket.on('setTurn',function(data){
                     if(data.turn == 'you'){
-                        $('#myHand').animate({
-                            opacity: 0.9
+                        $('.myArea').animate({
+                            opacity:0.8
                         },500)
-                        $('#foeHand').animate({
-                            opacity: 0.6
+                        $('.foeArea').animate({
+                            opacity: 0
                         },500)
                     }
                     if(data.turn == 'foe'){
-                        $('#myHand').animate({
-                            opacity: 0.6
+                        $('.foeArea').animate({
+                            opacity: 0.8
                         },500)
-                        $('#foeHand').animate({
-                            opacity: 0.9
+                        $('.myArea').animate({
+                            opacity: 0
                         },500)
                     }
                 })
@@ -212,37 +196,44 @@
 
                 // Game functions
 
-                socket.on('refreshCards',function(data){
-                    //console.log(data)
-                    for(i = 1; i <= 4; i++){
-                        $('#bir'+i).attr('src','/images/cards/'+data.foeHand[i-1]+'.png')
-                        $('#iki'+i).attr('src','/images/cards/'+data.hand[i-1]+'.png')
+                var createGroupedArray = function(arr, chunkSize) {
+                    var groups = [], i;
+                    for (i = 0; i < arr.length; i += chunkSize) {
+                        groups.push(arr.slice(i, i + chunkSize));
                     }
-                })
+                    return groups;
+                }
 
                 socket.on('refreshOrt',function(data){
-                    $('#orta').attr('src','images/cards/'+data.ort+'.png')
-                    $('#ortSum').text(data.ortSum)
-                })
+                    k = 0
+                    cards = createGroupedArray(data.ort,10)
+                    content = ""
+                    for(i in cards){
+                        content += "<tr>"
+                        for(j in cards[i]){
+                            content += "<td class='kart' id='"+(k)+"'><img src='/images/cards/"+cards[i][j]+".png'></img></td>"
+                            k++
+                        }
+                        content += "</tr>"
+                    }
+                    $("#ort").html(content)
+                    $("#last img").attr("src","/images/cards/"+data.last+".png")
+                    $(".kart").click(function(){
+                        socket.emit('hamleYap', {
+                            chosen: parseInt($(this).attr("id"))
+                        }, function(data){
+                            if(data){
 
-                $('.myCard').click(function(e){
-                    id = this.id
-                    socket.emit('kartAt', {
-                        id: id,
+                            }
+                        })
                     })
                 })
 
+
+
+
                 function refreshGamePanel(){
-                    for(i = 1; i < 5; i++){
-                        $('#bir'+i).attr('src','/images/cards/4-2.png')
-                        $('#iki'+i).attr('src','/images/cards/4-2.png')
-                    }
-                    foeNick = ''
-                    $('foeNick').text('')
-                    $('#orta').attr('src','/images/cards/4-2.png')
-                    $('#ortSum').text('0')
-                    $('#birSkor').text('0')
-                    $('#ikiSkor').text('0')
+                    $('#ort').html()
                 }
 
 
@@ -265,7 +256,20 @@
                     }
 
                 })
-
+                socket.on('getSmiley', function(data){
+                        $("#moves").css("background-image","url(images/moves/"+data.img+")")
+                        $("#moves").fadeIn(300)
+                        $("#moves").fadeOut(300)
+                })
+                $("#vur").on("click",function(e){
+                    socket.emit('sendSmiley', {type:"yumruk"})
+                })
+                $("#kalp").on("click",function(e){
+                    socket.emit('sendSmiley', {type:"kalp"})
+                })
+                $("#opucuk").on("click",function(e){
+                    socket.emit('sendSmiley', {type:"opucuk"})
+                })
 
 
             })
