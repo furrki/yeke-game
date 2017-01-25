@@ -240,8 +240,8 @@
                 // Updaters
 
                 socket.on('updateScores', function(data){
-                    $('#birSkor').text(data.foeScore)
-                    $('#ikiSkor').text(data.myScore)
+                    $('#birSkor').text(data.myScore)
+                    $('#ikiSkor').text(data.foeScore)
                 })
 
                 socket.on('updateUsers', function(data){
